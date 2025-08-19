@@ -13,43 +13,30 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 -- Enable Row Level Security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
--- Policies for user_profiles table
+-- Drop existing policies to avoid conflicts
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Admins can update user profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Authenticated users can view profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Authenticated users can update profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Public read access" ON user_profiles;
+DROP POLICY IF EXISTS "Service role can update" ON user_profiles;
+DROP POLICY IF EXISTS "Profile updates" ON user_profiles;
 
--- Users can read their own profile
-CREATE POLICY "Users can view own profile" ON user_profiles
-    FOR SELECT USING (auth.uid() = id);
-
+-- Create clean policies
 -- Users can insert their own profile (during signup)
 CREATE POLICY "Users can insert own profile" ON user_profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Users can update their own basic info
-CREATE POLICY "Users can update own profile" ON user_profiles
-    FOR UPDATE USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id AND role = OLD.role AND status = OLD.status);
+-- All authenticated users can read profiles (authorization in API)
+CREATE POLICY "Authenticated read access" ON user_profiles
+    FOR SELECT USING (auth.uid() IS NOT NULL);
 
--- Admins can view all profiles
-CREATE POLICY "Admins can view all profiles" ON user_profiles
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM user_profiles 
-            WHERE id = auth.uid() 
-            AND role = 'admin' 
-            AND status = 'active'
-        )
-    );
-
--- Admins can update user roles and status (but not their own role)
-CREATE POLICY "Admins can update user profiles" ON user_profiles
-    FOR UPDATE USING (
-        EXISTS (
-            SELECT 1 FROM user_profiles 
-            WHERE id = auth.uid() 
-            AND role = 'admin' 
-            AND status = 'active'
-        )
-        AND auth.uid() != user_profiles.id  -- Cannot modify own role/status
-    );
+-- All authenticated users can update profiles (authorization in API) 
+CREATE POLICY "Authenticated update access" ON user_profiles
+    FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 -- Create function to automatically create user profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
