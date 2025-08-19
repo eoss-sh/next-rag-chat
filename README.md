@@ -1,19 +1,42 @@
 # RAG Chat Application
 
-A RAG (Retrieval-Augmented Generation) powered chat application built with Next.js, Pinecone, and OpenAI.
+A secure, multi-tenant RAG (Retrieval-Augmented Generation) powered chat application built with Next.js, Supabase, Pinecone, and OpenAI.
 
 ## Features
 
-- 🤖 AI-powered chat with RAG capabilities
-- 📄 Document upload support (PDF and Markdown)
-- 🔍 Semantic search using embeddings
-- 🎨 Modern UI with Tailwind CSS and shadcn/ui
-- 📊 Real-time document processing and chunking
+- 🔐 **Authentication & Authorization**
+  - Email/password and Google OAuth login
+  - Role-based access control (Admin, User, Pending)
+  - Admin approval workflow for new users
+  - Secure route protection
+
+- 🤖 **AI-Powered Chat**
+  - RAG-enhanced conversations with document context
+  - Real-time source citation and relevance scoring
+  - Context-aware responses from uploaded documents
+
+- 📄 **Document Management** 
+  - PDF and Markdown file upload support
+  - Website URL processing and content extraction
+  - Automatic chunking and embedding generation
+  - Document source tracking in chat responses
+
+- 👨‍💼 **Admin Dashboard**
+  - User management and approval workflow
+  - Role assignment (User ↔ Admin)
+  - User status control (Active, Suspended)
+  - System usage statistics
+
+- 🎨 **Modern UI/UX**
+  - Responsive design with Tailwind CSS
+  - Clean component architecture with shadcn/ui
+  - Real-time loading states and error handling
 
 ## Prerequisites
 
 - Node.js 18+ 
 - pnpm (recommended) or npm
+- Supabase account and project
 - Pinecone account and API key
 - OpenAI API key
 
@@ -28,109 +51,97 @@ OPENAI_API_KEY=your_openai_api_key_here
 # Pinecone
 PINECONE_API_KEY=your_pinecone_api_key_here
 PINECONE_INDEX_NAME=your_pinecone_index_name_here
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## Setup
+## Quick Start
 
-1. **Install dependencies:**
+1. **Clone and install:**
    ```bash
+   git clone <repository-url>
+   cd next-rag-chat
    pnpm install
    ```
 
-2. **Set up Pinecone:**
-   - Create a Pinecone account at [pinecone.io](https://pinecone.io)
-   - Create a new index with dimension 1536 (for text-embedding-3-small)
-   - Copy your API key and index name to `.env.local`
+2. **Set up services:**
+   - **Supabase**: Create project, copy URL and anon key to `.env.local`
+   - **Pinecone**: Create index with dimension 1536, copy API key to `.env.local`
+   - **OpenAI**: Copy API key to `.env.local`
 
-3. **Run the development server:**
+3. **Initialize database:**
+   ```bash
+   # Run the SQL schema in your Supabase SQL editor
+   cat supabase-schema.sql
+   ```
+
+4. **Start development:**
    ```bash
    pnpm dev
    ```
-
-4. **Open your browser:**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Usage
+5. **Create first admin:**
+   - Sign up with your email
+   - Run the admin creation SQL in Supabase (see [docs/authentication.md](docs/authentication.md))
 
-### Chat Interface
-- Navigate to the main page to start chatting
-- The AI will use RAG to provide context-aware responses
-- User inputs are automatically embedded for semantic search
+## User Guide
 
-### Document Upload
-- Click "Upload" in the navigation or visit `/upload`
-- Drag and drop or select PDF and Markdown files
-- Documents are automatically:
-  - Chunked into smaller pieces
-  - Embedded using OpenAI's text-embedding-3-small
-  - Stored in Pinecone for semantic search
+### Getting Started
+- **New users**: Sign up → Wait for admin approval → Access chat/upload
+- **Admins**: Access admin dashboard at `/admin` to manage users
 
-### Supported File Types
-- **PDF**: Full text extraction and processing
-- **Markdown**: Direct text processing with markdown syntax removal
+### Features Overview
+- **Chat**: RAG-powered conversations with document context at `/chat`
+- **Upload**: Document/website upload and processing at `/upload` 
+- **Admin**: User management and system overview at `/admin`
 
-## Architecture
+For detailed documentation, see the [docs/](docs/) folder.
+
+## Architecture Overview
+
+### Tech Stack
+- **Framework**: Next.js 15 with App Router
+- **Authentication**: Supabase Auth (email/password + Google OAuth)
+- **Database**: Supabase PostgreSQL with Row Level Security
+- **Vector Database**: Pinecone for embeddings and semantic search
+- **AI**: OpenAI GPT-4 for chat, text-embedding-3-small for embeddings
+- **Styling**: Tailwind CSS + shadcn/ui components
 
 ### Key Components
+- **`contexts/auth-context.tsx`**: Authentication state management
+- **`middleware.ts`**: Route protection and role-based access control
+- **`app/api/`**: Secure API endpoints with role verification
+- **`lib/supabase.ts`**: Supabase client configuration
+- **`utils/`**: Document processing, embedding, and Pinecone operations
 
-- **`utils/pinecone.ts`**: Pinecone client and database operations
-- **`utils/embedding.ts`**: Embedding generation utilities
-- **`utils/document-processing.ts`**: Document chunking and processing
-- **`app/api/upload/route.ts`**: File upload and processing API
-- **`app/upload/page.tsx`**: Document upload interface
-- **`components/`**: Reusable UI components (shadcn/ui)
+### Security Model
+- **Row Level Security (RLS)**: Database-level access control
+- **Role-based Authorization**: Admin approval workflow
+- **Route Protection**: Middleware-based access control
+- **API Security**: Server-side role verification
 
-### Data Flow
+For detailed architecture documentation, see [docs/architecture.md](docs/architecture.md)
 
-1. **Document Upload:**
-   ```
-   File → Text Extraction → Chunking → Embedding → Pinecone Storage
-   ```
+## Contributing
 
-2. **Chat Process:**
-   ```
-   User Input → Embedding → Semantic Search → Context Retrieval → AI Response
-   ```
-
-## Development
-
-### Project Structure
-```
-├── app/
-│   ├── api/
-│   │   ├── chat/          # Chat API endpoints
-│   │   ├── embed/         # Embedding API
-│   │   └── upload/        # File upload API
-│   ├── upload/            # Upload page
-│   └── page.tsx           # Main chat page
-├── components/
-│   ├── ui/                # shadcn/ui components
-│   └── navigation.tsx     # Navigation component
-├── utils/
-│   ├── pinecone.ts        # Pinecone client
-│   ├── embedding.ts       # Embedding utilities
-│   └── document-processing.ts # Document processing
-└── lib/
-    └── utils.ts           # Utility functions
-```
-
-### Adding New File Types
-
-To extend support for new file types:
-
-1. Add the file type to `getFileType()` in `app/api/upload/route.ts`
-2. Create an extraction function in `utils/document-processing.ts`
-3. Update the processing logic in `processDocument()`
+See detailed development guides in the [docs/](docs/) folder:
+- [Authentication Setup](docs/authentication.md)
+- [Role System](docs/roles.md) 
+- [RAG Implementation](docs/rag.md)
+- [Admin Dashboard](docs/admin.md)
 
 ## Technologies Used
 
 - **Framework**: Next.js 15
+- **Authentication**: Supabase Auth
+- **Database**: Supabase PostgreSQL 
+- **Vector DB**: Pinecone
 - **AI**: OpenAI GPT-4, text-embedding-3-small
-- **Vector Database**: Pinecone
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
-- **File Processing**: pdf-parse, marked
-- **Icons**: Lucide React
+- **Styling**: Tailwind CSS + shadcn/ui
+- **File Processing**: pdf-parse, marked, cheerio
 
 ## License
 
