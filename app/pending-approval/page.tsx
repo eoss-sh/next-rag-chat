@@ -70,7 +70,7 @@ export default function PendingApprovalPage() {
                   </p>
                   <p className="text-yellow-700 dark:text-yellow-300 mt-1">
                     An administrator will review your account and approve access. 
-                    You'll receive an email notification once approved.
+                    You&apos;ll receive an email notification once approved.
                   </p>
                 </div>
               </div>

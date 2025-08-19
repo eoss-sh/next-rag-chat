@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase-server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { UpdateUserProfileRequest } from '@/lib/database.types'
 
 // Get all users (admin only)
 export async function GET() {
   try {
-    const supabase = createServerClient()
+    const supabase = await createSupabaseServerClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -44,7 +44,7 @@ export async function GET() {
 // Update user profile (admin only)
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createSupabaseServerClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     

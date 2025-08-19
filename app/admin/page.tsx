@@ -20,7 +20,7 @@ import {
 import { UserProfile } from '@/lib/database.types'
 
 export default function AdminDashboard() {
-  const { user, profile, loading, profileLoading, isAdmin } = useAuth()
+  const { user, loading, profileLoading, isAdmin } = useAuth()
   const router = useRouter()
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loadingUsers, setLoadingUsers] = useState(true)

@@ -104,7 +104,7 @@ export default function ChatPage() {
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
-                <p>Ask questions about your documents and I'll provide answers with sources.</p>
+                <p>Ask questions about your documents and I&apos;ll provide answers with sources.</p>
               </div>
             ) : (
               messages.map(message => (

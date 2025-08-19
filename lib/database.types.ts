@@ -18,4 +18,6 @@ export interface CreateUserProfileRequest {
 export interface UpdateUserProfileRequest {
   role?: 'user' | 'admin';
   status?: 'active' | 'suspended';
+  approved_by?: string;
+  approved_at?: string;
 }
