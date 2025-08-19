@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Upload, Search, LogOut, User } from 'lucide-react';
+import { MessageSquare, Upload, Search, LogOut, User, Shield } from 'lucide-react';
 
 export function Navigation() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin, isApproved } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,37 +29,59 @@ export function Navigation() {
             {user ? (
               // Authenticated navigation
               <>
-                <Link href="/chat">
-                  <Button
-                    variant={pathname === '/chat' ? 'default' : 'ghost'}
-                    className="flex items-center gap-2"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    Chat
-                  </Button>
-                </Link>
-                <Link href="/upload">
-                  <Button
-                    variant={pathname === '/upload' ? 'default' : 'ghost'}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Upload
-                  </Button>
-                </Link>
-                <Link href="/search">
-                  <Button
-                    variant={pathname === '/search' ? 'default' : 'ghost'}
-                    className="flex items-center gap-2"
-                  >
-                    <Search className="h-4 w-4" />
-                    Search
-                  </Button>
-                </Link>
+                {isApproved && (
+                  <>
+                    <Link href="/chat">
+                      <Button
+                        variant={pathname === '/chat' ? 'default' : 'ghost'}
+                        className="flex items-center gap-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Chat
+                      </Button>
+                    </Link>
+                    <Link href="/upload">
+                      <Button
+                        variant={pathname === '/upload' ? 'default' : 'ghost'}
+                        className="flex items-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload
+                      </Button>
+                    </Link>
+                    <Link href="/search">
+                      <Button
+                        variant={pathname === '/search' ? 'default' : 'ghost'}
+                        className="flex items-center gap-2"
+                      >
+                        <Search className="h-4 w-4" />
+                        Search
+                      </Button>
+                    </Link>
+                  </>
+                )}
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button
+                      variant={pathname === '/admin' ? 'default' : 'ghost'}
+                      className="flex items-center gap-2"
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <div className="flex items-center space-x-2 pl-2 border-l">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className="h-4 w-4" />
-                    {user.email}
+                    <div className="text-right">
+                      <div>{user.email}</div>
+                      {profile && (
+                        <div className="text-xs capitalize">
+                          {profile.role} • {profile.status.replace('_', ' ')}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Button
                     variant="ghost"

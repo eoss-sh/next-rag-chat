@@ -31,31 +31,77 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protected routes that require authentication
+  // Get user profile if user exists
+  let profile = null
+  if (user) {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('role, status')
+      .eq('id', user.id)
+      .single()
+    profile = data
+  }
+
+  // Protected routes that require authentication and approval
   const protectedRoutes = ['/chat', '/upload', '/search']
+  const adminRoutes = ['/admin']
   const authRoutes = ['/auth/login', '/auth/signup']
+  const pendingRoute = '/pending-approval'
   
   const isProtectedRoute = protectedRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
+  
+  const isAdminRoute = adminRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   )
   
   const isAuthRoute = authRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   )
-
-  // Redirect authenticated users away from auth pages
-  if (user && isAuthRoute) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/chat'
-    return NextResponse.redirect(redirectUrl)
-  }
+  
+  const isPendingRoute = request.nextUrl.pathname === pendingRoute
 
   // Redirect unauthenticated users from protected routes to login
-  if (!user && isProtectedRoute) {
+  if (!user && (isProtectedRoute || isAdminRoute || isPendingRoute)) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/auth/login'
     redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
+  }
+
+  // Handle authenticated users
+  if (user && profile) {
+    const isApproved = profile.status === 'active'
+    const isAdmin = profile.role === 'admin' && profile.status === 'active'
+
+    // Redirect authenticated users away from auth pages
+    if (isAuthRoute) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = isApproved ? '/chat' : '/pending-approval'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Redirect non-admin users away from admin routes
+    if (isAdminRoute && !isAdmin) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = isApproved ? '/chat' : '/pending-approval'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Redirect approved users away from pending page
+    if (isPendingRoute && isApproved) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/chat'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Redirect unapproved users from protected routes to pending
+    if (isProtectedRoute && !isApproved) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/pending-approval'
+      return NextResponse.redirect(redirectUrl)
+    }
   }
 
   return response
